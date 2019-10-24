@@ -33,7 +33,8 @@ create table Estoque(
 create table Produtos(
 	produtoId			int constraint PK_CodigoProduto primary key identity(1,1),
 	descricaoProduto	varchar(50),
-	precoUnitario		float
+	precoUnitario		float,
+	moedaFK				int,
 );
 create table Vendas(
 	vendaId				int constraint PK_CodigoVenda primary key identity(1,1),
@@ -47,12 +48,17 @@ create table Vendas_Produtos(
 	vendaFK				int,
 	produtoFK			int,
 	quantidade			int,
-	unidadeMedida		varchar(50)
+	unidadeMedida		varchar(50),
+);
+create table Moedas(
+	MoedaId				int constraint PK_CodigoMoeda primary key identity(1,1),
+	descricaoMoeda		varchar(10),
 );
 ------------------------------------------------------------------------------------------------------------------------------
 alter table Estoque			add constraint FK_parada				foreign key(paradaFK)		references Paradas(paradaId);
 alter table Estoque			add constraint FK_tipoEstoque			foreign key(tipoEstoqueFK)	references TipoEstoque(tipoEstoqueId);
 alter table Estoque			add constraint FK_produto				foreign key(produtoFK)		references Produtos(produtoId);
+alter table Produtos		add constraint FK_moeda					foreign key(moedaFK)		references Moedas(moedaId);
 alter table Paradas			add constraint FK_tipoObjeto			foreign key(tipoObjeto_FK)	references TiposObjetos(tipoObjetoId);	
 alter table Vendas			add constraint FK_parada_Vendas			foreign key(paradaFK)		references Paradas(paradaId);
 alter table Vendas			add constraint FK_espaconave_Vendas		foreign key(espaconaveFK)	references Espaconaves(espaconaveId);
@@ -152,25 +158,44 @@ end;
 
 ------------------------------------------------------------------------------------------------------------------------------
 create or alter procedure proc_CRUD_Produtos
-@opcao int,
-@produtoId int,
-@descProd varchar(50),
-@precoUnit float
+@opcao		int,
+@produtoId	int,
+@descProd	varchar(50),
+@precoUnit	float,
+@moeda		varchar(10)
 as
 begin
+	declare @moedaId int;
+	set @moedaId = (select MoedaId from Moedas where descricaoMoeda like @moeda);
 	if		(@opcao = 1)
-				insert into Produtos(descricaoProduto, precoUnitario)values(
+				insert into Produtos(descricaoProduto, precoUnitario, moedaFK)values(
 														  @descProd, 
-														  @precoUnit);
+														  @precoUnit,
+														  @moedaId);
 	else if	(@opcao = 2)
 				update Produtos set   descricaoProduto	= @descProd,
-									  precoUnitario		= @precoUnit
+									  precoUnitario		= @precoUnit,
+									  moedaFK			= @moedaId
 								where produtoId			= @produtoId;
 	else if	(@opcao = 3)
 				delete from Produtos 
 								where produtoId			= @produtoId;
 end;
-
+------------------------------------------------------------------------------------------------------------------------------
+create or alter procedure proc_CRUD_Moedas
+@opcao int,
+@moedaId int,
+@descricao varchar(10)
+as
+begin
+	if (@opcao = 1)
+			insert into Moedas(descricaoMoeda)values(@descricao);
+	if (@opcao = 2)
+			update Moedas	set descricaoMoeda	= @descricao
+							where MoedaId		= @moedaId;
+	if (@opcao = 3)
+			delete from Moedas where MoedaId = @moedaId;
+end;
 ------------------------------------------------------------------------------------------------------------------------------
 create or alter procedure proc_CRUD_Vendas
 @opcao int,
@@ -298,15 +323,35 @@ end;
 
 ------------------------------------------------------------------------------------------------------------------------------
 create or alter view RelatorioVendas as
-select vendaId, dataCompra,produtos.descricaoProduto, produtos.precoUnitario, vendas_produtos.quantidade, estoque.unidadeMedida,
-(precoUnitario * vendas_produtos.quantidade) as 'Valor total'
-from vendas inner join paradas on
-vendas.paradaFK = paradas.paradaId inner join vendas_produtos on
-vendas.vendaId = vendas_produtos.vendaFk inner join produtos on
-vendas_produtos.produtoFK = produtos.produtoId inner join estoque on
-produtos.produtoId = estoque.produtoFk
+select vendaId, dataCompra,produtos.descricaoProduto, espaconaves.nome as 'Comprador', produtos.precoUnitario, vendas_produtos.quantidade, estoque.unidadeMedida,
+(precoUnitario * vendas_produtos.quantidade) as 'Valor total', case when Moedas.descricaoMoeda like 'BRL' 
+																	then 'Real' when Moedas.descricaoMoeda like 'USD' 
+																	then 'Dolar'
+																end as 'Moeda'
+from vendas inner join paradas 
+on vendas.paradaFK				= paradas.paradaId				inner join vendas_produtos	
+on vendas.vendaId				= vendas_produtos.vendaFk		inner join produtos			
+on vendas_produtos.produtoFK	= produtos.produtoId			inner join estoque			
+on produtos.produtoId			= estoque.produtoFk				inner join Moedas
+on Moedas.MoedaId				= Produtos.moedaFK				inner join Espaconaves
+on Espaconaves.espaconaveId		= Vendas.espaconaveFK
 
 select * from RelatorioVendas
+
+create or alter view RelatorioEstoque as
+select Produtos.descricaoProduto, Produtos.precoUnitario, Estoque.quantidade as 'Quantidade em estoque', Estoque.unidadeMedida, Paradas.nomeParada as 'Local de venda', TiposObjetos.descricaoObjeto as 'Localização',
+TipoEstoque.descricaoEstoque, (quantidade * precoUnitario) as 'Valor Liquido total em estoque', case when Moedas.descricaoMoeda like 'BRL' 
+																									 then 'Real' when Moedas.descricaoMoeda like 'USD' 
+																									 then 'Dolar'
+																								end as 'Moeda'
+from Estoque inner join Produtos 
+on Estoque.produtoFK			= Produtos.produtoId	inner join Paradas
+on Paradas.paradaId				= Estoque.paradaFK		inner join TipoEstoque
+on TipoEstoque.tipoEstoqueId	= Estoque.tipoEstoqueFK inner join TiposObjetos
+on TiposObjetos.tipoObjetoId	= Paradas.tipoObjeto_FK inner join Moedas
+on Moedas.MoedaId				= Produtos.moedaFK
+
+select * from RelatorioEstoque
 ------------------------------------------------------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------------------------------------------------------
@@ -331,9 +376,13 @@ select * from RelatorioVendas
 exec proc_CRUD_Espaconave 1,null,'RocketX','RCX';
 select * from Espaconaves
 
-exec proc_CRUD_Produtos 1,null,'Coca-cola', 5.00;
-exec proc_CRUD_Produtos 1,null,'Pipoca', 2.00;
-exec proc_CRUD_Produtos 1,null,'Querosene', 3.50;
+exec proc_CRUD_Moedas 1, null, 'USD'
+exec proc_CRUD_Moedas 1, null, 'BRL'
+select * from Moedas
+
+exec proc_CRUD_Produtos 1,null,'Coca-cola', 5.00, 'BRL';
+exec proc_CRUD_Produtos 1,null,'Pipoca', 2.00, 'BRL';
+exec proc_CRUD_Produtos 1,null,'Querosene', 3.50, 'USD';
 select * from Produtos
 
 exec proc_CRUD_TipoEstoque 1,null, 'Pereciveis';
