@@ -78,185 +78,185 @@ end;
 
 ------------------------------------------------------------------------------------------------------------------------------
 create or alter procedure proc_CRUD_Estoque
-@opcao INT,
-@estoqueId int,
-@parada varchar(50),
-@tipoEstoque varchar(50),
-@produto varchar(50),
-@quantidade int,
-@UnidadeMedida varchar(50)
+@opcao			int,
+@estoqueId		int,
+@parada			varchar(50),
+@tipoEstoque	varchar(50),
+@produto		varchar(50),
+@quantidade		int,
+@UnidadeMedida	varchar(50)
 as
 begin
 	declare @codigoParada int, @codigoTipoEstoque int, @codigoProduto int;
 	set @codigoParada		= (select paradaId		from Paradas		where nomeParada		like @parada);
 	set @codigoTipoEstoque	= (select tipoEstoqueId	from TipoEstoque	where descricaoEstoque	like @tipoEstoque);
 	set @codigoProduto		= (select produtoId		from Produtos		where descricaoProduto	like @produto);
-	if		(@opcao = 1) 
+	if	(@opcao = 1) 
 			insert into Estoque(paradaFK, tipoEstoqueFK, produtoFK, quantidade, unidadeMedida)values(
 												  @codigoParada,
 												  @codigoTipoEstoque,
 												  @codigoProduto,
 												  @quantidade, 
 												  @UnidadeMedida);
-	else if	(@opcao = 2)
+	if	(@opcao = 2)
 			update Estoque	set	  paradaFK		= @codigoParada,
 								  tipoEstoqueFK	= @codigoTipoEstoque,
 								  produtoFK		= @codigoProduto,
 								  quantidade	= @quantidade,
 								  unidadeMedida	= @UnidadeMedida
 							where estoqueId		= @estoqueId;
-	else if (@opcao = 3)
+	if (@opcao = 3)
 			delete from Estoque 
 							where estoqueId		= @estoqueId;
 end;
 
 ------------------------------------------------------------------------------------------------------------------------------
 create or alter procedure proc_CRUD_Espaconave
-@opcao int,
-@espaconaveId int,
-@nomeNave varchar(50),
-@tagName varchar(3)
+@opcao			int,
+@espaconaveId	int,
+@nomeNave		varchar(50),
+@tagName		varchar(3)
 as
 begin
-	if		(@opcao = 1)
+	if	(@opcao = 1)
 			insert into Espaconaves(nome, tagName, dataRegistro)values(
 													  @nomeNave, 
 													  @tagName, 
 													  GETDATE());
-	else if (@opcao = 2)
+	if	(@opcao = 2)
 			update Espaconaves	set	  nome			= @nomeNave, 
 									  tagName		= @tagName, 
 									  dataRegistro	= GETDATE() 
 								where espaconaveId	= @espaconaveId;
-	else if (@opcao = 3)
+	if	(@opcao = 3)
 			delete from Espaconaves 
 								where espaconaveId	= @espaconaveId;
 end;
 
 ------------------------------------------------------------------------------------------------------------------------------
 create or alter procedure proc_CRUD_Paradas
-@opcao int,
-@paradaId int,
-@nomeObjeto varchar(50),
-@nomeParada varchar(50)
+@opcao			int,
+@paradaId		int,
+@nomeObjeto		varchar(50),
+@nomeParada		varchar(50)
 as
 begin
 	declare @tipoObjeto int;
 	set @tipoObjeto = (select tipoObjetoId from TiposObjetos where nomeObjeto like @nomeObjeto);
-	if		(@opcao = 1)
+	if	(@opcao = 1)
 				insert into Paradas(nomeParada, tipoObjeto_FK)values(
 													  @nomeParada,
 													  @tipoObjeto);
-	else if(@opcao = 2)
+	if	(@opcao = 2)
 				update Paradas	set	  nomeParada	= @nomeParada,
 									  tipoObjeto_FK	= @tipoObjeto
 								where paradaId		= @paradaId;
-	else if(@opcao = 3)
+	if	(@opcao = 3)
 				delete from Paradas 
 								where paradaId		= @paradaId;
 end;
 
 ------------------------------------------------------------------------------------------------------------------------------
 create or alter procedure proc_CRUD_Produtos
-@opcao		int,
-@produtoId	int,
-@descProd	varchar(50),
-@precoUnit	float,
-@moeda		varchar(10)
+@opcao			int,
+@produtoId		int,
+@descProd		varchar(50),
+@precoUnit		float,
+@moeda			varchar(10)
 as
 begin
 	declare @moedaId int;
 	set @moedaId = (select MoedaId from Moedas where descricaoMoeda like @moeda);
-	if		(@opcao = 1)
+	if	(@opcao = 1)
 				insert into Produtos(descricaoProduto, precoUnitario, moedaFK)values(
 														  @descProd, 
 														  @precoUnit,
 														  @moedaId);
-	else if	(@opcao = 2)
+	if	(@opcao = 2)
 				update Produtos set   descricaoProduto	= @descProd,
 									  precoUnitario		= @precoUnit,
 									  moedaFK			= @moedaId
 								where produtoId			= @produtoId;
-	else if	(@opcao = 3)
+	if	(@opcao = 3)
 				delete from Produtos 
 								where produtoId			= @produtoId;
 end;
 ------------------------------------------------------------------------------------------------------------------------------
 create or alter procedure proc_CRUD_Moedas
-@opcao int,
-@moedaId int,
-@descricao varchar(10)
+@opcao			int,
+@moedaId		int,
+@descricao		varchar(10)
 as
 begin
 	if (@opcao = 1)
 			insert into Moedas(descricaoMoeda)values(@descricao);
 	if (@opcao = 2)
-			update Moedas	set descricaoMoeda	= @descricao
-							where MoedaId		= @moedaId;
+			update Moedas		set descricaoMoeda	= @descricao
+								where MoedaId		= @moedaId;
 	if (@opcao = 3)
-			delete from Moedas where MoedaId = @moedaId;
+			delete from Moedas	where MoedaId		= @moedaId;
 end;
 ------------------------------------------------------------------------------------------------------------------------------
 create or alter procedure proc_CRUD_Vendas
-@opcao int,
-@vendaId int,
-@parada varchar(50),
-@espaconave varchar(50)
+@opcao			int,
+@vendaId		int,
+@parada			varchar(50),
+@espaconave		varchar(50)
 as 
 begin 
 	declare @codigoProduto int, @codigoParada int, @codigoNave int, @unidadeMedida varchar(50);
 	set @codigoParada	= (select paradaId		from Paradas		where nomeParada		like @parada);
 	set @codigoNave		= (select espaconaveId	from Espaconaves	where nome				like @espaconave);
-	if		(@opcao = 1)
+	if	(@opcao = 1)
 			insert into Vendas(paradaFK, espaconaveFK, dataCompra)values(
 												   @codigoParada,
 												   @codigoNave,
 												   GETDATE());
-	else if(@opcao = 2)
-			update Vendas set	paradaFK		= (@codigoParada),
-								espaconaveFK	= (@codigoNave),
-								dataCompra		= GETDATE()
-								where VendaId	= (@vendaId);
-	else if(@opcao = 3)
+	if	(@opcao = 2)
+			update Vendas		set		paradaFK		= (@codigoParada),
+										espaconaveFK	= (@codigoNave),
+										dataCompra		= GETDATE()
+								where	VendaId			= (@vendaId);
+	if	(@opcao = 3)
 			delete from Vendas_Produtos where VendaFK	= (@vendaId);
 			delete from Vendas			where VendaId	= (@vendaId);
 end;
 
 ------------------------------------------------------------------------------------------------------------------------------
 create or alter procedure proc_CRUD_TipoEstoque
-@opcao int,
-@TipoEstoqueId int,
-@descricao varchar(50)
+@opcao			int,
+@TipoEstoqueId	int,
+@descricao		varchar(50)
 as
 begin
-	if		(@opcao = 1)
+	if	(@opcao = 1)
 			insert into TipoEstoque(descricaoEstoque)values(
 													   @descricao);
-	else if	(@opcao = 2)
+	if	(@opcao = 2)
 			update TipoEstoque	set descricaoEstoque = @descricao
 								where tipoEstoqueId  = @TipoEstoqueId;
-	else if	(@opcao = 3)
+	if	(@opcao = 3)
 			delete from TipoEstoque 
 								where tipoEstoqueId	 = @TipoEstoqueId;
 end;
 
 ------------------------------------------------------------------------------------------------------------------------------
 create or alter procedure proc_CRUD_TiposObjetos
-@opcao int,
-@TiposObjetosId int,
-@descricaoObjeto varchar(50),
-@nomeObjeto varchar(50)
+@opcao				int,
+@TiposObjetosId		int,
+@descricaoObjeto	varchar(50),
+@nomeObjeto			varchar(50)
 as 
 begin
-	if		(@opcao = 1)
+	if	(@opcao = 1)
 		insert into TiposObjetos(descricaoObjeto, nomeObjeto)values(
 												    @descricaoObjeto, 
 												    @nomeObjeto);
-	else if	(@opcao = 2)
+	if	(@opcao = 2)
 		update TiposObjetos set   descricaoObjeto = @descricaoObjeto,
 								  nomeObjeto	  = @nomeObjeto
 							where tipoObjetoId    = @TiposObjetosId;
-	else if	(@opcao = 3)
+	if	(@opcao = 3)
 		delete from TiposObjetos 
 							where tipoObjetoId	  = @TiposObjetosId;
 end;
@@ -270,9 +270,9 @@ create or alter procedure proc_CRUD_Vendas_Produtos
 as
 begin
 	declare @unidadeMedida varchar(50), @produtoid int;
-	set		@produtoid		= (select produtoId from produtos where descricaoProduto like @produto);
-	set		@unidadeMedida  = (select unidadeMedida from Estoque where produtoFK = @produtoid);
-	if		(@opcao = 1)
+	set		@produtoid		= (select produtoId		from produtos	where descricaoProduto like @produto);
+	set		@unidadeMedida  = (select unidadeMedida from Estoque	where produtoFK = @produtoid);
+	if	(@opcao = 1)
 		insert into Vendas_Produtos(vendaFK, produtoFK, quantidade, unidadeMedida)values(
 										@vendaId,
 										@produtoId,
@@ -280,15 +280,15 @@ begin
 										@unidadeMedida);
 		update Vendas set precoTotal = (dbo.func_calc_precoTotal(@vendaId)) where vendaId = (@vendaId);
 	if	(@opcao = 2)
-		update Vendas_Produtos  set		vendaFK			  = @vendaId,
-										produtoFK		  = @produtoId,
-										quantidade		  = @quantidade,
-										unidadeMedida	  = @unidadeMedida
-								where	vendas_ProdutosId = @vendasProdutosId;
+		update Vendas_Produtos		set		vendaFK			  = @vendaId,
+											produtoFK		  = @produtoId,
+											quantidade		  = @quantidade,
+											unidadeMedida	  = @unidadeMedida
+									where	vendas_ProdutosId = @vendasProdutosId;
 		update Vendas set precoTotal = (dbo.func_calc_precoTotal(@vendaId)) where vendaId = @vendaId;
 	if (@opcao = 3)
-		delete from Vendas_Produtos where vendas_ProdutosId = @vendasProdutosId and
-										  vendaFK			= @vendaId;
+		delete from Vendas_Produtos where	vendas_ProdutosId = @vendasProdutosId and
+											vendaFK			  = @vendaId;
 end;
 													
 ------------------------------------------------------------------------------------------------------------------------------
@@ -324,10 +324,12 @@ end;
 ------------------------------------------------------------------------------------------------------------------------------
 create or alter view RelatorioVendas as
 select vendaId, dataCompra,produtos.descricaoProduto, espaconaves.nome as 'Comprador', produtos.precoUnitario, vendas_produtos.quantidade, estoque.unidadeMedida,
-(precoUnitario * vendas_produtos.quantidade) as 'Valor total', case when Moedas.descricaoMoeda like 'BRL' 
-																	then 'Real' when Moedas.descricaoMoeda like 'USD' 
-																	then 'Dolar'
-																end as 'Moeda'
+(precoUnitario * vendas_produtos.quantidade) as 'Valor total', 
+case when Moedas.descricaoMoeda like 'BRL' 
+		then 'Real' 
+	 when Moedas.descricaoMoeda like 'USD' 
+		then 'Dolar'
+end as 'Moeda'
 from vendas inner join paradas 
 on vendas.paradaFK				= paradas.paradaId				inner join vendas_produtos	
 on vendas.vendaId				= vendas_produtos.vendaFk		inner join produtos			
@@ -335,15 +337,15 @@ on vendas_produtos.produtoFK	= produtos.produtoId			inner join estoque
 on produtos.produtoId			= estoque.produtoFk				inner join Moedas
 on Moedas.MoedaId				= Produtos.moedaFK				inner join Espaconaves
 on Espaconaves.espaconaveId		= Vendas.espaconaveFK
-
-select * from RelatorioVendas
-
+------------------------------------------------------------------------------------------------------------------------------
 create or alter view RelatorioEstoque as
 select Produtos.descricaoProduto, Produtos.precoUnitario, Estoque.quantidade as 'Quantidade em estoque', Estoque.unidadeMedida, Paradas.nomeParada as 'Local de venda', TiposObjetos.descricaoObjeto as 'Localização',
-TipoEstoque.descricaoEstoque, (quantidade * precoUnitario) as 'Valor Liquido total em estoque', case when Moedas.descricaoMoeda like 'BRL' 
-																									 then 'Real' when Moedas.descricaoMoeda like 'USD' 
-																									 then 'Dolar'
-																								end as 'Moeda'
+TipoEstoque.descricaoEstoque, (quantidade * precoUnitario) as 'Valor Liquido total em estoque', 
+case when Moedas.descricaoMoeda like 'BRL' 
+		then 'Real' 
+	 when Moedas.descricaoMoeda like 'USD' 
+		then 'Dolar'
+end as 'Moeda'
 from Estoque inner join Produtos 
 on Estoque.produtoFK			= Produtos.produtoId	inner join Paradas
 on Paradas.paradaId				= Estoque.paradaFK		inner join TipoEstoque
@@ -351,7 +353,7 @@ on TipoEstoque.tipoEstoqueId	= Estoque.tipoEstoqueFK inner join TiposObjetos
 on TiposObjetos.tipoObjetoId	= Paradas.tipoObjeto_FK inner join Moedas
 on Moedas.MoedaId				= Produtos.moedaFK
 
-select * from RelatorioEstoque
+
 ------------------------------------------------------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------------------------------------------------------
@@ -416,3 +418,5 @@ select * from produtos
 select * from Espaconaves
 select * from tipoEstoque
 select * from paradas
+select * from RelatorioVendas
+select * from RelatorioEstoque
